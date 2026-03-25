@@ -3,10 +3,30 @@ import { useState } from 'react';
 interface ResultDisplayProps {
   title: string;
   content: string;
+  mode: 'transcript' | 'summary';
 }
 
-export function ResultDisplay({ title, content }: ResultDisplayProps) {
+function formatTranscript(text: string): string {
+  if (text.includes('\n')) return text;
+  const sentences = text.match(/[^.!?]+[.!?]+(\s|$)/g) ?? [text];
+  const paragraphs: string[] = [];
+  let current = '';
+  for (const s of sentences) {
+    if (current.length + s.length > 600 && current.length > 0) {
+      paragraphs.push(current.trim());
+      current = s;
+    } else {
+      current += s;
+    }
+  }
+  if (current.trim()) paragraphs.push(current.trim());
+  return paragraphs.join('\n\n');
+}
+
+export function ResultDisplay({ title, content, mode }: ResultDisplayProps) {
   const [copied, setCopied] = useState(false);
+
+  const displayed = mode === 'transcript' ? formatTranscript(content) : content;
 
   function handleCopy() {
     navigator.clipboard.writeText(content).then(() => {
@@ -31,7 +51,7 @@ export function ResultDisplay({ title, content }: ResultDisplayProps) {
         className="font-mono text-sm bg-gray-50 p-4 overflow-y-auto whitespace-pre-wrap break-words"
         style={{ maxHeight: '480px' }}
       >
-        {content}
+        {displayed}
       </pre>
     </div>
   );

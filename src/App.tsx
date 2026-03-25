@@ -71,7 +71,7 @@ export default function App() {
             <LoadingState mode={mode} />
           ) : status === 'success' && data ? (
             <div className="flex flex-col gap-4">
-              <ResultDisplay title={data.title} content={data.result} />
+              <ResultDisplay title={data.title} content={data.result} mode={data.mode as 'transcript' | 'summary'} />
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <DownloadButtons text={data.result} title={data.title} />
                 <button
