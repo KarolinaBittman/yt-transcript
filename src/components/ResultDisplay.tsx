@@ -6,9 +6,10 @@ interface ResultDisplayProps {
   mode: 'transcript' | 'summary';
 }
 
-function formatTranscript(text: string): string {
-  if (text.includes('\n')) return text;
-  const sentences = text.match(/[^.!?]+[.!?]+(\s|$)/g) ?? [text];
+function formatTranscript(text: string): string[] {
+  // Flatten subtitle line-breaks into spaces, then regroup into paragraphs
+  const normalized = text.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
+  const sentences = normalized.match(/[^.!?]+[.!?]+(\s|$)/g) ?? [normalized];
   const paragraphs: string[] = [];
   let current = '';
   for (const s of sentences) {
@@ -20,13 +21,11 @@ function formatTranscript(text: string): string {
     }
   }
   if (current.trim()) paragraphs.push(current.trim());
-  return paragraphs.join('\n\n');
+  return paragraphs;
 }
 
 export function ResultDisplay({ title, content, mode }: ResultDisplayProps) {
   const [copied, setCopied] = useState(false);
-
-  const displayed = mode === 'transcript' ? formatTranscript(content) : content;
 
   function handleCopy() {
     navigator.clipboard.writeText(content).then(() => {
@@ -47,12 +46,24 @@ export function ResultDisplay({ title, content, mode }: ResultDisplayProps) {
           {copied ? 'Copied!' : 'Copy'}
         </button>
       </div>
-      <pre
-        className="font-mono text-sm bg-gray-50 p-4 overflow-y-auto whitespace-pre-wrap break-words"
-        style={{ maxHeight: '480px' }}
-      >
-        {displayed}
-      </pre>
+
+      {mode === 'transcript' ? (
+        <div
+          className="bg-gray-50 p-4 overflow-y-auto text-sm text-gray-800 leading-relaxed"
+          style={{ maxHeight: '480px' }}
+        >
+          {formatTranscript(content).map((para, i) => (
+            <p key={i} className="mb-4 last:mb-0">{para}</p>
+          ))}
+        </div>
+      ) : (
+        <pre
+          className="font-mono text-sm bg-gray-50 p-4 overflow-y-auto whitespace-pre-wrap break-words"
+          style={{ maxHeight: '480px' }}
+        >
+          {content}
+        </pre>
+      )}
     </div>
   );
 }
